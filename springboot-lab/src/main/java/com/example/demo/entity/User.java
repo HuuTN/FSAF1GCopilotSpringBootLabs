@@ -3,7 +3,8 @@ package com.example.demo.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
-import java.util.List;
+
+
 
 @Data
 @Entity
@@ -17,5 +18,8 @@ public class User {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
-    private List<Order> orders;
+    private java.util.List<Order> orders;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private java.util.List<Review> reviews;
 }

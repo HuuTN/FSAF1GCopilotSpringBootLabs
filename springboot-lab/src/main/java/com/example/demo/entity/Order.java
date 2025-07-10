@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Data
 @Entity
+@Table(name = "orders")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,4 +23,7 @@ public class Order {
     @JoinColumn(name = "user_id")
     @JsonBackReference
     private User user;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status = OrderStatus.NEW;
 }
