@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Ecommerce Platform Project</a> &gt; <a href="index.source.html" class="el_package">com.example.service</a> &gt; <span class="el_source">OrderServiceImpl.java</span></div><h1>OrderServiceImpl.java</h1><pre class="source lang-java linenums">package com.example.service;
+
+import com.example.entity.Order;
+import com.example.entity.OrderItem;
+import com.example.entity.Product;
+import com.example.entity.User;
+import com.example.repository.OrderRepository;
+import com.example.repository.ProductRepository;
+import com.example.repository.UserRepository;
+import com.example.constant.OrderStatus;
+import com.example.exception.ResourceNotFoundException;
+import com.example.dto.OrderItemDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.ArrayList;
+
+@Service
+public class OrderServiceImpl implements OrderService {
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+
+    @Autowired
+<span class="fc" id="L29">    public OrderServiceImpl(OrderRepository orderRepository, ProductRepository productRepository, UserRepository userRepository) {</span>
+<span class="fc" id="L30">        this.orderRepository = orderRepository;</span>
+<span class="fc" id="L31">        this.productRepository = productRepository;</span>
+<span class="fc" id="L32">        this.userRepository = userRepository;</span>
+<span class="fc" id="L33">    }</span>
+
+    @Override
+    public List&lt;Order&gt; getAllOrders() {
+<span class="nc" id="L37">        return orderRepository.findAll();</span>
+    }
+
+    @Override
+    public Order getOrderById(Long id) {
+<span class="fc" id="L42">        Optional&lt;Order&gt; order = orderRepository.findById(id);</span>
+<span class="fc" id="L43">        return order.orElse(null);</span>
+    }
+
+    @Override
+    public List&lt;Order&gt; getOrdersByUserName(String userName) {
+<span class="fc" id="L48">        return orderRepository.findByUser_Name(userName);</span>
+    }
+
+    @Override
+    public List&lt;Order&gt; getOrdersByStatus(String status) {
+<span class="fc" id="L53">        return orderRepository.findByStatus(status);</span>
+    }
+
+    @Override
+    @Transactional
+    public void cancelOrder(Long orderId) {
+<span class="fc" id="L59">        Optional&lt;Order&gt; optionalOrder = orderRepository.findById(orderId);</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (optionalOrder.isPresent()) {</span>
+<span class="fc" id="L61">            Order order = optionalOrder.get();</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">            if (OrderStatus.PENDING.equals(order.getStatus())) {</span>
+<span class="fc" id="L63">                order.setStatus(OrderStatus.CANCELED);</span>
+<span class="fc" id="L64">                orderRepository.save(order);</span>
+                
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">                if (order.getItems() != null) {</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">                    for (OrderItem item : order.getItems()) {</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">                        if (item.getProduct() != null) {</span>
+<span class="fc" id="L69">                            Product product = productRepository.findById(item.getProduct().getId())</span>
+<span class="pc" id="L70">                                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Product not found with id: &quot; + item.getProduct().getId()));</span>
+<span class="fc" id="L71">                            product.setStock(product.getStock() + item.getQuantity());</span>
+<span class="fc" id="L72">                            productRepository.save(product);</span>
+                        }
+<span class="fc" id="L74">                    }</span>
+                }
+            }
+        }
+<span class="fc" id="L78">    }</span>
+
+    @Override
+    @Transactional
+    public Order placeOrder(Long userId, List&lt;OrderItemDTO&gt; orderItems) {
+        // Find user
+<span class="fc" id="L84">        User user = userRepository.findById(userId)</span>
+<span class="fc" id="L85">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with id: &quot; + userId));</span>
+
+        // Create new order
+<span class="fc" id="L88">        Order order = new Order();</span>
+<span class="fc" id="L89">        order.setUser(user);</span>
+<span class="fc" id="L90">        order.setCustomerName(user.getName());</span>
+<span class="fc" id="L91">        order.setCustomerEmail(user.getEmail());</span>
+<span class="fc" id="L92">        order.setStatus(OrderStatus.PENDING);</span>
+<span class="fc" id="L93">        order.setItems(new ArrayList&lt;&gt;());</span>
+
+<span class="fc" id="L95">        BigDecimal totalAmount = BigDecimal.ZERO;</span>
+
+        // Process each order item
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        for (OrderItemDTO itemRequest : orderItems) {</span>
+<span class="fc" id="L99">            Product product = productRepository.findById(itemRequest.getProductId())</span>
+<span class="fc" id="L100">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Product not found with id: &quot; + itemRequest.getProductId()));</span>
+
+            // Check stock availability
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            if (product.getStock() &lt; itemRequest.getQuantity()) {</span>
+<span class="fc" id="L104">                throw new IllegalArgumentException(&quot;Insufficient stock for product: &quot; + product.getName());</span>
+            }
+
+            // Create order item
+<span class="fc" id="L108">            OrderItem orderItem = new OrderItem();</span>
+<span class="fc" id="L109">            orderItem.setOrder(order);</span>
+<span class="fc" id="L110">            orderItem.setProduct(product);</span>
+<span class="fc" id="L111">            orderItem.setQuantity(itemRequest.getQuantity());</span>
+<span class="fc" id="L112">            orderItem.setPrice(product.getPrice());</span>
+
+<span class="fc" id="L114">            order.getItems().add(orderItem);</span>
+
+            // Update product stock
+<span class="fc" id="L117">            product.setStock(product.getStock() - itemRequest.getQuantity());</span>
+<span class="fc" id="L118">            productRepository.save(product);</span>
+
+            // Calculate total
+<span class="fc" id="L121">            totalAmount = totalAmount.add(product.getPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity())));</span>
+<span class="fc" id="L122">        }</span>
+
+<span class="fc" id="L124">        order.setTotalAmount(totalAmount);</span>
+<span class="fc" id="L125">        return orderRepository.save(order);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
