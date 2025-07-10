@@ -1,4 +1,4 @@
-package lab4_20250708.src.main.java.com.example.usermanagement.entity;
+package com.example.usermanagement.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;

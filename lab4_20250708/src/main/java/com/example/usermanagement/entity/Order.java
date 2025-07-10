@@ -1,4 +1,4 @@
-package com.example.usermanagement.entity;
+package lab5_20250710.src.main.java.com.example.usermanagement.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -27,6 +27,8 @@ public class Order {
     @JsonManagedReference
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
+
+    private String status;
 
     // Getters and Setters
     public Long getId() {
@@ -67,5 +69,17 @@ public class Order {
 
     public void setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = orderItems;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public List<OrderItem> getItems() {
+        return orderItems;
     }
 }
