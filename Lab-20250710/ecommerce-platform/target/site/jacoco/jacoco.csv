@@ -1,0 +1,25 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Ecommerce Platform Project,com.example.dto,UserDTO.UserDTOBuilder,8,28,0,0,0,1,1,5,1,5
+Ecommerce Platform Project,com.example.dto,OrderItemDTO,81,26,16,0,0,5,12,6,4,6
+Ecommerce Platform Project,com.example.dto,UserDTO,135,74,32,2,0,19,21,11,4,11
+Ecommerce Platform Project,com.example.dto,OrderInfoDTO.ProductInfo,180,56,40,0,0,8,24,12,4,12
+Ecommerce Platform Project,com.example.dto,OrderInfoDTO,265,76,62,0,0,10,35,16,4,16
+Ecommerce Platform Project,com.example.dto,ProductDTO,0,66,0,0,0,21,0,14,0,14
+Ecommerce Platform Project,com.example.entity.base,Auditable,14,3,0,0,6,1,4,1,4,1
+Ecommerce Platform Project,com.example.exception,ResourceNotFoundException,0,4,0,0,0,2,0,1,0,1
+Ecommerce Platform Project,com.example.exception,ErrorResponse,0,15,0,0,0,6,0,3,0,3
+Ecommerce Platform Project,com.example.exception,GlobalExceptionHandler,24,31,0,0,4,5,2,3,2,3
+Ecommerce Platform Project,com.example,RunApplication,5,3,0,0,2,1,1,1,1,1
+Ecommerce Platform Project,com.example.constant,OrderStatus,3,0,0,0,1,0,1,0,1,0
+Ecommerce Platform Project,com.example.controller,OrderController,18,115,4,4,3,29,5,7,1,7
+Ecommerce Platform Project,com.example.controller,UserController,32,25,0,0,6,5,3,3,3,3
+Ecommerce Platform Project,com.example.controller,ProductController,50,55,2,2,7,11,5,3,3,3
+Ecommerce Platform Project,com.example.service,OrderServiceImpl,12,233,4,10,1,50,6,11,2,8
+Ecommerce Platform Project,com.example.service,UserServiceImpl,86,15,0,0,17,4,8,2,8,2
+Ecommerce Platform Project,com.example.config,JpaConfig,0,3,0,0,0,1,0,1,0,1
+Ecommerce Platform Project,com.example.entity,User,167,48,37,1,1,7,24,10,5,10
+Ecommerce Platform Project,com.example.entity,Product,61,38,4,0,6,7,6,11,4,11
+Ecommerce Platform Project,com.example.entity,Category,70,17,4,0,8,4,10,5,8,5
+Ecommerce Platform Project,com.example.entity,User.UserBuilder,16,30,0,0,0,1,2,5,2,5
+Ecommerce Platform Project,com.example.entity,Order,72,52,4,0,6,9,6,15,4,15
+Ecommerce Platform Project,com.example.entity,OrderItem,72,28,4,0,8,5,9,8,7,8
