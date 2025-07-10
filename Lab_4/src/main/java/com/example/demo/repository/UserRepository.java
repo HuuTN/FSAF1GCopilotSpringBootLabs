@@ -1,0 +1,10 @@
+package com.example.demo.repository;
+
+import com.example.demo.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+public interface UserRepository extends JpaRepository<User, Long> {
+    // Native query to join users and orders, grouping by order id
+    @org.springframework.data.jpa.repository.Query(value = "SELECT o.id AS orderId, u.id AS userId, u.name, u.email FROM orders o JOIN users u ON o.user_id = u.id GROUP BY o.id, u.id, u.name, u.email", nativeQuery = true)
+    List<Object[]> findOrderUserDetailsGroupByOrderId();
+}
