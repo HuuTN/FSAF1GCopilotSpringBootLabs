@@ -12,7 +12,14 @@ import java.util.List;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    // Custom JPQL query: find products by name containing keyword
+
+    @Query("SELECT p FROM Product p WHERE lower(p.name) LIKE lower(concat('%', :keyword, '%')) AND p.price <= :maxPrice")
+    Page<Product> searchProducts(@Param("keyword") String keyword, @Param("maxPrice") double maxPrice, Pageable pageable);
+
+    @Query(value = "SELECT count(*) FROM product WHERE category_id = :categoryId", nativeQuery = true)
+    long countProductsByCategoryId(@Param("categoryId") Long categoryId);
+
+// Custom JPQL query: find products by name containing keyword
     @Query("SELECT p FROM Product p WHERE p.name LIKE %:keyword%")
     List<Product> searchByName(@Param("keyword") String keyword);
 
