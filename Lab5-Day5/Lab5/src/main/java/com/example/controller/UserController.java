@@ -1,78 +1,86 @@
+
 package com.example.controller;
 
 import com.example.dto.UserDTO;
 import com.example.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/v1/users")
-@Validated
 public class UserController {
-    @Autowired
-    private UserService userService;
 
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Operation(summary = "Get all users with pagination", description = "Returns a paginated list of users")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "List of users returned successfully")
+    })
     @GetMapping
-    @Operation(summary = "Get all users", description = "Retrieve a paginated list of all users.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Successfully retrieved list of users")
-    })
-    public ResponseEntity<Page<UserDTO>> getAllUsers(Pageable pageable) {
-        Page<UserDTO> users = userService.getAllUsers(pageable);
-        return new ResponseEntity<>(users, HttpStatus.OK);
+    public Page<UserDTO> getAllUsers(@PageableDefault(size = 10) Pageable pageable) {
+        return userService.getAllUsers(pageable);
     }
 
+    @Operation(summary = "Get user by ID", description = "Returns a user by their ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User found and returned"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @GetMapping("/{id}")
-    @Operation(summary = "Get user by ID", description = "Retrieve a user by their ID.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Successfully retrieved user"),
-        @ApiResponse(responseCode = "404", description = "User not found")
-    })
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        UserDTO user = userService.getUserById(id);
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        UserDTO UserDto = userService.getUserById(id);
+        return ResponseEntity.ok(UserDto);
     }
 
+    @Operation(summary = "Create a new user", description = "Creates a new user with the provided information")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
     @PostMapping
-    @Operation(summary = "Create user", description = "Create a new user.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "User created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
-        UserDTO createdUser = userService.createUser(userDTO);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO UserDto) {
+        UserDTO savedUser = userService.createUser(UserDto);
+        return ResponseEntity.ok(savedUser);
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update user", description = "Update an existing user by ID.")
-    @ApiResponses(value = {
+    @Operation(summary = "Update an existing user", description = "Updates the user with the given ID")
+    @ApiResponses({
         @ApiResponse(responseCode = "200", description = "User updated successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid input"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
-        UserDTO updatedUser = userService.updateUser(id, userDTO);
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO UserDto) {
+        UserDTO updatedUser = userService.updateUser(id, UserDto);
+        return ResponseEntity.ok(updatedUser);
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete user", description = "Delete a user by ID.")
-    @ApiResponses(value = {
+    @Operation(summary = "Delete a user", description = "Deletes the user with the given ID")
+    @ApiResponses({
         @ApiResponse(responseCode = "204", description = "User deleted successfully"),
         @ApiResponse(responseCode = "404", description = "User not found")
     })
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.noContent().build();
     }
 }

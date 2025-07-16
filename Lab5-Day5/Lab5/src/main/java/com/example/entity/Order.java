@@ -2,41 +2,64 @@
 // A JPA for Order with a one-to-many relationship to OrderItem entities. The relationship should casecade all operations.
 package com.example.entity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import java.util.Set;
+import java.time.LocalDateTime;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Objects;
-import com.example.entity.base.Auditable;
+import com.example.enums.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
 @Entity
 @Table(name = "orders")
-public class Order extends Auditable {
+// Removed Lombok annotations
+public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String customerName;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Order> orderItems;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonBackReference
+    private User user;
 
     @Column(nullable = false)
-    private String customerEmail;
-
-
-    @Column(name = "total_amount", nullable = false)
-    private BigDecimal totalAmount;
-
-    @Column(name = "status", nullable = false)
     private String status;
 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_status", nullable = false)
+    private OrderStatus orderStatus;
+
+
+    @Column(name = "order_date", nullable = false)
+    private LocalDateTime orderDate;
+
+    public Order() {}
+
+    public Order(Long id, Set<Order> orderItems, User user, String status, OrderStatus orderStatus, LocalDateTime orderDate) {
+        this.id = id;
+        this.orderItems = orderItems;
+        this.user = user;
+        this.status = status;
+        this.orderStatus = orderStatus;
+        this.orderDate = orderDate;
+    }
+    public LocalDateTime getOrderDate() {
+        return orderDate;
+    }
+
+    public void setOrderDate(LocalDateTime orderDate) {
+        this.orderDate = orderDate;
+    }
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
     public String getStatus() {
         return status;
     }
@@ -45,31 +68,27 @@ public class Order extends Auditable {
         this.status = status;
     }
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> items;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonBackReference
-    private User user;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getCustomerName() { return customerName; }
-    public String getCustomerEmail() { return customerEmail; }
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public List<OrderItem> getItems() { return items; }
-    public User getUser() { return user; }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Order order)) return false;
-        return Objects.equals(id, order.id);
+    public Long getId() {
+        return id;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Set<Order> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(Set<Order> orderItems) {
+        this.orderItems = orderItems;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

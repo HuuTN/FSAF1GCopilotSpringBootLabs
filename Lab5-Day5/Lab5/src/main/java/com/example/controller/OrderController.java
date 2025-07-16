@@ -1,94 +1,135 @@
+
+
 package com.example.controller;
 
-import com.example.dto.OrderInfoDTO;
 import com.example.entity.Order;
-import com.example.entity.OrderItem;
-import com.example.entity.Product;
-import com.example.entity.User;
+import com.example.dto.OrderDTO;
 import com.example.service.OrderService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController {
-    private final OrderService orderService;
-
     @Autowired
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
+    private OrderService orderService;
 
-    @Operation(summary = "Get orders by status", description = "Retrieve all orders with a specific status.")
+    @Operation(summary = "Get orders by user ID", description = "Returns all orders for a given user ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of orders with the given status returned successfully")
+        @ApiResponse(responseCode = "200", description = "List of orders for user returned successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @GetMapping("/status/{status}")
-    public List<OrderInfoDTO> getOrdersByStatus(@PathVariable String status) {
-        List<Order> orders = orderService.getOrdersByStatus(status);
-        return orders.stream().map(this::toOrderInfoDTO).collect(Collectors.toList());
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getOrdersByUserId(@PathVariable Long userId) {
+        List<Order> orders = orderService.getOrdersByUserId(userId);
+        if (orders == null || orders.isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "User not found or user has no orders");
+            error.put("status", HttpStatus.NOT_FOUND.value());
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        }
+        return ResponseEntity.ok(orders);
     }
 
-    @Operation(summary = "Get all orders", description = "Retrieve a list of all orders with user and product details.")
+    @Operation(summary = "Get all orders", description = "Returns a list of all orders")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of orders returned successfully")
+        @ApiResponse(responseCode = "200", description = "List of orders returned successfully")
     })
     @GetMapping
-    public List<OrderInfoDTO> getAllOrders() {
-        List<Order> orders = orderService.getAllOrders();
-        return orders.stream().map(this::toOrderInfoDTO).collect(Collectors.toList());
+    public List<Order> getAllOrders() {
+        return orderService.getAllOrders();
     }
 
-    @Operation(summary = "Get order by ID", description = "Retrieve order details by order ID.")
+    @Operation(summary = "Get all orders with pagination", description = "Returns a paginated list of all orders")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Order found and returned successfully"),
-            @ApiResponse(responseCode = "404", description = "Order not found")
+        @ApiResponse(responseCode = "200", description = "Paginated list of orders returned successfully")
+    })
+    @GetMapping("/page")
+    public Page<Order> getAllOrdersWithPagination(@PageableDefault(size = 10) Pageable pageable) {
+        return orderService.getAllOrders(pageable);
+    }
+
+    @Operation(summary = "Get order by ID", description = "Returns an order by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Order found and returned"),
+        @ApiResponse(responseCode = "404", description = "Order not found")
     })
     @GetMapping("/{id}")
-    public OrderInfoDTO getOrderById(@PathVariable Long id) {
-        Order order = orderService.getOrderById(id);
-        return toOrderInfoDTO(order);
+    public ResponseEntity<?> getOrderById(@PathVariable Long id) {
+        Optional<Order> order = orderService.getOrderById(id);
+        if (order.isPresent()) {
+            return ResponseEntity.ok(order.get());
+        } else {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Order not found");
+            error.put("status", HttpStatus.NOT_FOUND.value());
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        }
     }
 
-    @Operation(summary = "Get orders by user name", description = "Retrieve all orders made by a specific user name.")
+    @Operation(summary = "Create a new order", description = "Creates a new order with the provided information")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of user's orders returned successfully")
+        @ApiResponse(responseCode = "200", description = "Order created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
-    @GetMapping("/user/name/{userName}")
-    public List<OrderInfoDTO> getOrdersByUser(@PathVariable String userName) {
-        List<Order> orders = orderService.getOrdersByUserName(userName);
-        return orders.stream().map(this::toOrderInfoDTO).collect(Collectors.toList());
+    @PostMapping
+    public Order createOrder(@RequestBody OrderDTO orderDTO) {
+        return orderService.createOrder(orderDTO);
     }
 
-    private OrderInfoDTO toOrderInfoDTO(Order order) {
-        if (order == null)
-            return null;
-        User user = order.getUser();
-        List<OrderInfoDTO.ProductInfo> products = order.getItems().stream().map(this::toProductInfo)
-                .collect(Collectors.toList());
-        return new OrderInfoDTO(
-                order.getId(),
-                order.getCustomerName(),
-                order.getCustomerEmail(),
-                user != null ? user.getName() : null,
-                order.getTotalAmount(),
-                order.getStatus(),
-                products);
+    @Operation(summary = "Update an existing order", description = "Updates the order with the given ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Order updated successfully"),
+        @ApiResponse(responseCode = "404", description = "Order not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody OrderDTO orderDTO) {
+        Optional<Order> updatedOrder = orderService.updateOrder(id, orderDTO);
+        if (updatedOrder.isPresent()) {
+            return ResponseEntity.ok(updatedOrder.get());
+        } else {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Order not found");
+            error.put("status", HttpStatus.NOT_FOUND.value());
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        }
     }
 
-    private OrderInfoDTO.ProductInfo toProductInfo(OrderItem item) {
-        Product product = item.getProduct();
-        return new OrderInfoDTO.ProductInfo(
-                product.getId(),
-                product.getName(),
-                product.getCategory() != null ? product.getCategory().getName() : null,
-                item.getQuantity(),
-                item.getPrice() != null ? item.getPrice().toString() : null);
+    @Operation(summary = "Delete an order", description = "Deletes the order with the given ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Order deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Order not found")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
+        boolean deleted = orderService.deleteOrder(id);
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Order not found");
+            error.put("status", HttpStatus.NOT_FOUND.value());
+            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        }
     }
 }
